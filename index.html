@@ -257,21 +257,15 @@
       messageDiv.textContent = "GAPAPA SAYANG, COBA LAGI YA!";
     }
 
-    function jump() {
-      if (!bunny.jumping && !gameOver) {
+    function jumpOrRestart() {
+      if (gameOver) {
+        restartGame();
+      } else if (!bunny.jumping) {
         bunny.dy = bunny.jumpPower;
         bunny.jumping = true;
         jumpSound.play();
       }
     }
-
-    document.addEventListener("keydown", function (e) {
-      if (e.code === "Space") jump();
-      if (e.code === "Enter" && gameOver) restartGame();
-    });
-
-    canvas.addEventListener("touchstart", jump);
-    canvas.addEventListener("mousedown", jump);
 
     function restartGame() {
       obstacles = [];
@@ -287,6 +281,13 @@
       lastMilestone = 0;
       update();
     }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.code === "Space") jumpOrRestart();
+    });
+
+    canvas.addEventListener("touchstart", jumpOrRestart);
+    canvas.addEventListener("mousedown", jumpOrRestart);
 
     bunnyImg.onload = () => {
       update();
