@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kelinci Retro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Press Start 2P', monospace;
+      background-color: #ffccdd;
+      color: #661133;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    canvas {
+      background: #ffe6f0;
+      border: 5px solid #aa3366;
+      display: block;
+      margin: 20px auto;
+      image-rendering: pixelated;
+    }
+    #info, #message {
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    audio { margin-top: 10px; }
+
+    .bottom-section {
+      display: flex;
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #fff0f5;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .bottom-section img {
+      max-width: 100%;
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+    }
+
+    .left,
+    .right {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .right {
+      font-size: 12px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  
+  <h1>HAIII SAYAANGG, I MADE A GAME FOR U</h1>
+
+  <audio controls autoplay loop>
+    <source src="musik.mp3" type="audio/mp3">
+    Browser kamu tidak mendukung audio player.
+  </audio>
+
+  <canvas id="gameCanvas" width="800" height="300"></canvas>
+  <div id="info">SCORE: <span id="score">0</span> | NYAWA: <span id="lives">3</span></div>
+  <div id="message"></div>
+
+  <audio id="jumpSound" src="lompat.wav"></audio>
+  <audio id="hitSound" src="tabrak.wav"></audio>
+
+  <div class="bottom-section">
+    <div class="left">
+      <img src="kosong.jpg" alt="Foto kosong">
+    </div>
+    <div class="right">
+      kamuu bingung gaa foto yang kosong inii buat apaa??<br><br>
+      iyaa buat pas kitaa nanti udah foto bareng hihihi,<br><br>
+      jujur akuu pengen fotoo bareng samaa kamuu hahaha
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const bunnyImg = new Image();
+    bunnyImg.src = "kelinci.png";
+
+    const cloudImg = new Image();
+    cloudImg.src = "awan.png";
+
+    const obstacleImg = new Image();
+    obstacleImg.src = "rintangan.png";
+
+    let bunny = {
+      x: 50,
+      y: 220,
+      width: 50,
+      height: 50,
+      dy: 0,
+      gravity: 1.5,
+      jumpPower: -15,
+      jumping: false
+    };
+
+    const jumpSound = document.getElementById("jumpSound");
+    const hitSound = document.getElementById("hitSound");
+
+    let obstacles = [];
+    let hearts = [];
+    let clouds = [];
+
+    let score = 0;
+    let lives = 3;
+    let gameOver = false;
+
+    const scoreSpan = document.getElementById("score");
+    const livesSpan = document.getElementById("lives");
+    const messageDiv = document.getElementById("message");
+
+    const messages = [
+      "WAHH KAMUU JAGOO BANGETT SAAYAANGGG!!",
+      "KALOO KALAHH PAP AKUU YAA",
+      "GIMANAA SERUU GAA???"
+    ];
+    let lastMilestone = 0;
+
+    function drawBunny() {
+      ctx.drawImage(bunnyImg, bunny.x, bunny.y, bunny.width, bunny.height);
+    }
+
+    function drawObstacle(ob) {
+      ctx.drawImage(obstacleImg, ob.x, ob.y, ob.width, ob.height);
+    }
+
+    function drawHeart(h) {
+      ctx.fillStyle = "#ff66cc";
+      ctx.beginPath();
+      ctx.moveTo(h.x + 10, h.y + 10);
+      ctx.arc(h.x + 5, h.y + 10, 5, Math.PI, 0);
+      ctx.arc(h.x + 15, h.y + 10, 5, Math.PI, 0);
+      ctx.lineTo(h.x + 10, h.y + 20);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawGround() {
+      ctx.fillStyle = "#cc99aa";
+      ctx.fillRect(0, 270, canvas.width, 30);
+    }
+
+    function drawCloud(c) {
+      ctx.drawImage(cloudImg, c.x, c.y, c.width, c.height);
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawGround();
+      drawBunny();
+
+      bunny.y += bunny.dy;
+      bunny.dy += bunny.gravity;
+
+      if (bunny.y >= 220) {
+        bunny.y = 220;
+        bunny.jumping = false;
+      }
+
+      if (Math.random() < 0.01) {
+        obstacles.push({ x: 800, y: 240, width: 30, height: 30 });
+      }
+
+      if (Math.random() < 0.005) {
+        hearts.push({ x: 800, y: 200, width: 20, height: 20 });
+      }
+
+      if (Math.random() < 0.02) {
+        clouds.push({ x: 800, y: Math.random() * 100, width: 40, height: 20 });
+      }
+
+      for (let i = clouds.length - 1; i >= 0; i--) {
+        let c = clouds[i];
+        c.x -= 1;
+        drawCloud(c);
+        if (c.x + c.width < 0) clouds.splice(i, 1);
+      }
+
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        let o = obstacles[i];
+        o.x -= 5;
+        drawObstacle(o);
+
+        let hitbox = {
+          x: o.x + 5,
+          y: o.y + 5,
+          width: o.width - 10,
+          height: o.height - 10
+        };
+
+        if (
+          bunny.x < hitbox.x + hitbox.width &&
+          bunny.x + bunny.width > hitbox.x &&
+          bunny.y < hitbox.y + hitbox.height &&
+          bunny.y + bunny.height > hitbox.y
+        ) {
+          obstacles.splice(i, 1);
+          lives--;
+          livesSpan.textContent = lives;
+          hitSound.play();
+          if (lives === 0) endGame();
+        }
+      }
+
+      for (let i = hearts.length - 1; i >= 0; i--) {
+        let h = hearts[i];
+        h.x -= 4;
+        drawHeart(h);
+
+        if (
+          bunny.x < h.x + 20 &&
+          bunny.x + bunny.width > h.x &&
+          bunny.y < h.y + 20 &&
+          bunny.y + bunny.height > h.y
+        ) {
+          if (lives < 3) lives++;
+          hearts.splice(i, 1);
+          livesSpan.textContent = lives;
+        }
+      }
+
+      score++;
+      scoreSpan.textContent = score;
+
+      if (score >= lastMilestone + 1000) {
+        lastMilestone += 1000;
+        const randomIndex = Math.floor(Math.random() * messages.length);
+        messageDiv.textContent = messages[randomIndex];
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    function endGame() {
+      gameOver = true;
+      messageDiv.textContent = "GAPAPA SAYANG, COBA LAGI YA!";
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.code === "Space" && !bunny.jumping && !gameOver) {
+        bunny.dy = bunny.jumpPower;
+        bunny.jumping = true;
+        jumpSound.play();
+      } else if (e.code === "Enter" && gameOver) {
+        obstacles = [];
+        hearts = [];
+        clouds = [];
+        lives = 3;
+        score = 0;
+        gameOver = false;
+        bunny.y = 220;
+        messageDiv.textContent = "";
+        livesSpan.textContent = lives;
+        scoreSpan.textContent = score;
+        lastMilestone = 0;
+        update();
+      }
+    });
+
+    bunnyImg.onload = () => {
+      update();
+    };
+  </script>
+</body>
+</html>
