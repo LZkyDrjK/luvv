@@ -13,57 +13,58 @@
       color: #661133;
       text-align: center;
       margin: 0;
-      padding: 0;
+      padding: 10px;
     }
     h1 {
-      margin-top: 20px;
       font-size: 14px;
+      margin: 10px 0;
     }
     canvas {
       background: #ffe6f0;
-      border: 5px solid #aa3366;
+      border: 3px solid #aa3366;
       display: block;
-      margin: 20px auto;
+      margin: 10px auto;
       image-rendering: pixelated;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
     }
     #info, #message {
-      font-size: 12px;
-      margin-top: 10px;
+      font-size: 10px;
+      margin-top: 6px;
     }
-    audio { margin-top: 10px; }
+    audio { margin-top: 6px; }
 
     .bottom-section {
       display: flex;
-      margin-top: 40px;
-      padding: 20px;
-      background-color: #fff0f5;
-      justify-content: center;
-      align-items: center;
       flex-wrap: wrap;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #fff0f5;
     }
-
-    .bottom-section img {
-      max-width: 100%;
+    .left, .right {
+      flex: 1 1 100%;
+      padding: 10px;
+    }
+    .left img {
       width: 100%;
-      max-height: 300px;
+      max-height: 200px;
       object-fit: cover;
     }
-
-    .left,
     .right {
-      flex: 1;
-      padding: 20px;
-    }
-
-    .right {
-      font-size: 12px;
+      font-size: 10px;
       text-align: left;
+    }
+    @media (min-width: 600px) {
+      .left, .right {
+        flex: 1;
+      }
     }
   </style>
 </head>
 <body>
-  
-  <h1>HAIII SAYAANGG, I MADE A GAME FOR U</h1>
+
+  <h1>HAIII SAYAANGG, I HAVE A GAME FOR U</h1>
 
   <audio controls autoplay loop>
     <source src="musik.mp3" type="audio/mp3">
@@ -122,6 +123,7 @@
     let score = 0;
     let lives = 3;
     let gameOver = false;
+    let lastMilestone = 0;
 
     const scoreSpan = document.getElementById("score");
     const livesSpan = document.getElementById("lives");
@@ -132,7 +134,6 @@
       "KALOO KALAHH PAP AKUU YAA",
       "GIMANAA SERUU GAA???"
     ];
-    let lastMilestone = 0;
 
     function drawBunny() {
       ctx.drawImage(bunnyImg, bunny.x, bunny.y, bunny.width, bunny.height);
@@ -256,26 +257,36 @@
       messageDiv.textContent = "GAPAPA SAYANG, COBA LAGI YA!";
     }
 
-    document.addEventListener("keydown", function (e) {
-      if (e.code === "Space" && !bunny.jumping && !gameOver) {
+    function jump() {
+      if (!bunny.jumping && !gameOver) {
         bunny.dy = bunny.jumpPower;
         bunny.jumping = true;
         jumpSound.play();
-      } else if (e.code === "Enter" && gameOver) {
-        obstacles = [];
-        hearts = [];
-        clouds = [];
-        lives = 3;
-        score = 0;
-        gameOver = false;
-        bunny.y = 220;
-        messageDiv.textContent = "";
-        livesSpan.textContent = lives;
-        scoreSpan.textContent = score;
-        lastMilestone = 0;
-        update();
       }
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.code === "Space") jump();
+      if (e.code === "Enter" && gameOver) restartGame();
     });
+
+    canvas.addEventListener("touchstart", jump);
+    canvas.addEventListener("mousedown", jump);
+
+    function restartGame() {
+      obstacles = [];
+      hearts = [];
+      clouds = [];
+      lives = 3;
+      score = 0;
+      gameOver = false;
+      bunny.y = 220;
+      messageDiv.textContent = "";
+      livesSpan.textContent = lives;
+      scoreSpan.textContent = score;
+      lastMilestone = 0;
+      update();
+    }
 
     bunnyImg.onload = () => {
       update();
